@@ -2,6 +2,7 @@ import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import zlib from 'zlib';
 import cluster from 'cluster';
 import os from 'os';
 import { handleApiRequest } from './utils/api.js';
@@ -29,7 +30,7 @@ const MIME_TYPES = {
 };
 
 // Serve static files
-function serveStaticFile(filePath, res) {
+function serveStaticFile(filePath, res, req) {
   fs.readFile(filePath, (err, data) => {
     if (err) {
       res.writeHead(404, { 'Content-Type': 'text/plain' });
@@ -40,8 +41,53 @@ function serveStaticFile(filePath, res) {
     const ext = path.extname(filePath);
     const contentType = MIME_TYPES[ext] || 'application/octet-stream';
     
-    res.writeHead(200, { 'Content-Type': contentType });
-    res.end(data);
+    // Add cache headers for better performance
+    const headers = { 'Content-Type': contentType };
+    
+    // Cache static assets for 1 year (31536000 seconds)
+    if (ext === '.js' || ext === '.mjs' || ext === '.css') {
+      headers['Cache-Control'] = 'public, max-age=31536000, immutable';
+    }
+
+    // Check if client supports Brotli compression
+    const acceptEncoding = req.headers['accept-encoding'] || '';
+    const supportsBrotli = acceptEncoding.includes('br');
+    const supportsGzip = acceptEncoding.includes('gzip');
+    
+    // Compress text-based files
+    const compressibleTypes = ['.html', '.css', '.js', '.mjs', '.json', '.svg'];
+    const shouldCompress = compressibleTypes.includes(ext) && (supportsBrotli || supportsGzip);
+    
+    if (shouldCompress) {
+      if (supportsBrotli) {
+        headers['Content-Encoding'] = 'br';
+        zlib.brotliCompress(data, (err, compressed) => {
+          if (err) {
+            // Fallback to uncompressed
+            res.writeHead(200, headers);
+            res.end(data);
+            return;
+          }
+          res.writeHead(200, headers);
+          res.end(compressed);
+        });
+      } else if (supportsGzip) {
+        headers['Content-Encoding'] = 'gzip';
+        zlib.gzip(data, (err, compressed) => {
+          if (err) {
+            // Fallback to uncompressed
+            res.writeHead(200, headers);
+            res.end(data);
+            return;
+          }
+          res.writeHead(200, headers);
+          res.end(compressed);
+        });
+      }
+    } else {
+      res.writeHead(200, headers);
+      res.end(data);
+    }
   });
 }
 
@@ -73,14 +119,14 @@ const server = http.createServer((req, res) => {
   // Serve static files from public directory
   if (url.pathname.startsWith('/css/') || url.pathname.startsWith('/js/')) {
     const filePath = path.join(__dirname, 'public', url.pathname);
-    serveStaticFile(filePath, res);
+    serveStaticFile(filePath, res, req);
     return;
   }
 
   // Serve components as static files
   if (url.pathname.startsWith('/components/')) {
     const filePath = path.join(__dirname, url.pathname);
-    serveStaticFile(filePath, res);
+    serveStaticFile(filePath, res, req);
     return;
   }
 
@@ -96,8 +142,39 @@ const server = http.createServer((req, res) => {
       });
       
       if (html) {
-        res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end(html);
+        // Check for compression support
+        const acceptEncoding = req.headers['accept-encoding'] || '';
+        const supportsBrotli = acceptEncoding.includes('br');
+        const supportsGzip = acceptEncoding.includes('gzip');
+        
+        const headers = { 'Content-Type': 'text/html' };
+        
+        if (supportsBrotli) {
+          headers['Content-Encoding'] = 'br';
+          zlib.brotliCompress(html, (err, compressed) => {
+            if (err) {
+              res.writeHead(200, { 'Content-Type': 'text/html' });
+              res.end(html);
+              return;
+            }
+            res.writeHead(200, headers);
+            res.end(compressed);
+          });
+        } else if (supportsGzip) {
+          headers['Content-Encoding'] = 'gzip';
+          zlib.gzip(html, (err, compressed) => {
+            if (err) {
+              res.writeHead(200, { 'Content-Type': 'text/html' });
+              res.end(html);
+              return;
+            }
+            res.writeHead(200, headers);
+            res.end(compressed);
+          });
+        } else {
+          res.writeHead(200, headers);
+          res.end(html);
+        }
         return;
       }
     }
