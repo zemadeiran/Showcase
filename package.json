@@ -1,0 +1,12 @@
+{
+  "name": "react-portfolio-apps",
+  "private": true,
+  "workspaces": [
+    "todo-app",
+    "weather-widget",
+    "portfolio-card",
+    "blog-preview",
+    "calculator",
+    "fullstack-app"
+  ]
+}

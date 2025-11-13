@@ -1,0 +1,116 @@
+<div class="container mx-auto px-4 py-16">
+    <div class="max-w-6xl mx-auto">
+        <!-- Loading State -->
+        <div id="loading" class="text-center py-12">
+            <div class="text-gray-600">Loading...</div>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div id="dashboard-content" class="hidden">
+            <!-- Header -->
+            <div class="mb-8">
+                <h2 class="text-4xl font-bold text-gray-900 mb-2">Dashboard</h2>
+                <p class="text-gray-600">Welcome back, <span id="user-name"></span>!</p>
+            </div>
+
+            <!-- User Info Card -->
+            <div class="bg-white border border-gray-200 rounded-xl p-8 mb-8">
+                <h3 class="text-2xl font-bold text-gray-900 mb-4">Account Information</h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+                        <p class="text-gray-900" id="user-email"></p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Full Name</label>
+                        <p class="text-gray-900" id="user-full-name"></p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Role</label>
+                        <p class="text-gray-900 capitalize" id="user-role"></p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Member Since</label>
+                        <p class="text-gray-900" id="user-created"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="grid md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
+                    <div class="w-12 h-12 bg-gray-900 rounded-lg flex items-center justify-center mb-4">
+                        <icon-component name="profile" class="w-6 h-6 text-white"></icon-component>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Profile</h3>
+                    <p class="text-gray-600 mb-4">Update your account information</p>
+                    <a href="/dashboard/profile" class="text-gray-900 font-semibold hover:underline">Edit Profile →</a>
+                </div>
+
+                <div class="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
+                    <div class="w-12 h-12 bg-gray-900 rounded-lg flex items-center justify-center mb-4">
+                        <icon-component name="settings" class="w-6 h-6 text-white"></icon-component>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Settings</h3>
+                    <p class="text-gray-600 mb-4">Manage your preferences</p>
+                    <a href="/dashboard/settings" class="text-gray-900 font-semibold hover:underline">View Settings →</a>
+                </div>
+
+                <div class="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
+                    <div class="w-12 h-12 bg-gray-900 rounded-lg flex items-center justify-center mb-4">
+                        <icon-component name="chart" class="w-6 h-6 text-white"></icon-component>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Activity</h3>
+                    <p class="text-gray-600 mb-4">View your recent activity</p>
+                    <a href="/dashboard/activity" class="text-gray-900 font-semibold hover:underline">See Activity →</a>
+                </div>
+            </div>
+
+            <!-- Logout Button -->
+            <div class="text-center">
+                <button onclick="auth.logout()" class="px-6 py-3 border-2 border-gray-900 text-gray-900 rounded-lg font-semibold hover:bg-gray-50 transition-all">
+                    Sign Out
+                </button>
+            </div>
+        </div>
+
+        <!-- Not Authenticated -->
+        <div id="not-authenticated" class="hidden text-center py-12">
+            <h3 class="text-2xl font-bold text-gray-900 mb-4">Please Sign In</h3>
+            <p class="text-gray-600 mb-6">You need to be signed in to view your dashboard</p>
+            <a href="/login" class="inline-block px-6 py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-gray-800 transition-all">
+                Sign In
+            </a>
+        </div>
+    </div>
+</div>
+
+<script src="/js/auth.js"></script>
+<script>
+async function loadDashboard() {
+    const loading = document.getElementById('loading');
+    const content = document.getElementById('dashboard-content');
+    const notAuth = document.getElementById('not-authenticated');
+    
+    const user = await auth.checkAuth();
+    
+    loading.classList.add('hidden');
+    
+    if (user) {
+        // Show dashboard
+        content.classList.remove('hidden');
+        
+        // Populate user data
+        document.getElementById('user-name').textContent = user.full_name || user.email;
+        document.getElementById('user-email').textContent = user.email;
+        document.getElementById('user-full-name').textContent = user.full_name || 'Not set';
+        document.getElementById('user-role').textContent = user.role || 'user';
+        document.getElementById('user-created').textContent = new Date(user.created_at).toLocaleDateString();
+    } else {
+        // Show not authenticated message
+        notAuth.classList.remove('hidden');
+    }
+}
+
+loadDashboard();
+</script>

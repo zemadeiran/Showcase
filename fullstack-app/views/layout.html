@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Modern Web App">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>{{TITLE}} - Modern Web App</title>
+    <meta name="description" content="{{DESCRIPTION}}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Mobile-first viewport detection and utilities
+        window.viewport = {
+            isMobile: false,
+            isTablet: false,
+            isDesktop: false,
+            width: window.innerWidth,
+            height: window.innerHeight,
+
+            // Touch capability detection
+            hasTouch: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
+
+            // Update viewport info
+            update: function() {
+                this.width = window.innerWidth;
+                this.height = window.innerHeight;
+                this.isMobile = this.width < 768;
+                this.isTablet = this.width >= 768 && this.width < 1024;
+                this.isDesktop = this.width >= 1024;
+            },
+
+            // Get current breakpoint
+            getBreakpoint: function() {
+                if (this.width < 640) return 'sm';
+                if (this.width < 768) return 'md';
+                if (this.width < 1024) return 'lg';
+                if (this.width < 1280) return 'xl';
+                return '2xl';
+            }
+        };
+
+        // Initialize viewport detection
+        viewport.update();
+
+        // Update on resize
+        window.addEventListener('resize', function() {
+            viewport.update();
+        });
+
+        // Mobile-first Tailwind config
+        tailwind.config = {
+            theme: {
+                screens: {
+                    'sm': '640px',
+                    'md': '768px',
+                    'lg': '1024px',
+                    'xl': '1280px',
+                    '2xl': '1536px',
+                },
+                extend: {
+                    colors: {
+                        primary: '#667eea',
+                        secondary: '#764ba2',
+                    }
+                }
+            },
+            corePlugins: {
+                // Ensure responsive utilities work mobile-first
+                responsive: true,
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="flex flex-col min-h-screen">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200">
+        <nav-component></nav-component>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1">
+        {{CONTENT}}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-8">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex flex-col md:flex-row items-center justify-between text-gray-600 text-sm">
+                <p>&copy; 2025 Modern Web App. Built with Node.js & SQLite.</p>
+                <div class="flex space-x-4 mt-4 md:mt-0">
+                    <a href="/about" class="hover:text-gray-900 transition-colors">About</a>
+                    <a href="/contact" class="hover:text-gray-900 transition-colors">Contact</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script type="module" src="/components/ui/nav.js"></script>
+    <script type="module" src="/components/ui/icons.js"></script>
+    <script src="/components/ui/toast.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/main.js"></script>
+</body>
+</html>

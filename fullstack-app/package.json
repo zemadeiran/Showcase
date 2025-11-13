@@ -1,0 +1,14 @@
+{
+  "name": "fullstack-app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "NODE_ENV=development node server.js",
+    "prod": "NODE_ENV=production USE_CLUSTER=true node server.js",
+    "cluster": "USE_CLUSTER=true node server.js"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
